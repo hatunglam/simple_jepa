@@ -7,6 +7,8 @@ from einops import rearrange
 class PatchEmbed(nn.Module):
     def __init__(self, img_size, patch_size, in_channels, embed_size):
         super().__init__()
+
+        # probably not needed
         if isinstance(img_size, int):
             img_size = img_size, img_size
         if isinstance(patch_size, int):
@@ -25,6 +27,8 @@ class PatchEmbed(nn.Module):
         x = rearrange(x, "b e h w -> b (h w) e")
         
         return x
+    
+
     
 
     
