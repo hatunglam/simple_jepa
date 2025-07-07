@@ -43,7 +43,40 @@ class Predictor(nn.Module):
         # Choose only the target prediction
         # Which is (Batch, Target sequence, Embed)
         return x[:, -target_mask.shape[1]:, :]
+    
+# Main model
+class IJEPA(nn.Module):
+    def __init__(self, ):
+        super().__init__()
+
+        # Define number of Mask and mode 
+
+        # Patch Embeddings and Pos Embed
+
+        # adding CLS
+
+        # Layer Norm
+
+
+        # Teacher and Student Encoder, where student encoder is the deepcopy of the teacher encoder
+
+
+        # Initialize Predictor
+
+    @torch.no_grad()
+    def get_target(self):
         
+        pass
+
+    def get_context(self):
+
+        pass
+
+    def forward(self):
+
+        pass
+
+    
         
     
 

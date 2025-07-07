@@ -18,7 +18,7 @@ class PatchEmbed(nn.Module):
         if isinstance(img_size, int):
             img_size = img_size, img_size
         if isinstance(patch_size, int):
-            patch_size = patch_size, patch_size
+            patch_size = patch_size, patch_size 
         #calculate the number of patches
         self.patch_shape = (img_size[0] // patch_size[0], img_size[1] // patch_size[1])
 
@@ -49,7 +49,8 @@ class Predictor(nn.Module):
     
 '''Main Model Class'''
 class IJEPA_base(nn.Module):
-    def __init__(self, img_size, patch_size, in_chans, embed_dim, enc_depth, pred_depth, num_heads, post_emb_norm=False, M = 4, mode="train", layer_dropout=0.):
+    def __init__(self, img_size, patch_size, in_chans, embed_dim, enc_depth,
+                pred_depth, num_heads, post_emb_norm=False, M = 4, mode="train", layer_dropout=0.):
         super().__init__()
         self.M = M
         self.mode = mode
@@ -57,12 +58,12 @@ class IJEPA_base(nn.Module):
 
         #define the patch embedding and positional embedding
         self.patch_embed = PatchEmbed(img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
-        self.patch_dim  = (self.patch_embed.patch_shape[0], self.patch_embed.patch_shape[1])
-        self.num_tokens = self.patch_embed.patch_shape[0] * self.patch_embed.patch_shape[1]
-        self.pos_embedding = nn.Parameter(torch.randn(1, self.num_tokens, embed_dim))
+        self.patch_dim  = (self.patch_embed.patch_shape[0], self.patch_embed.patch_shape[1]) # = n_patches (img_size[0] // patch_size[0], img_size[1] // patch_size[1])
+        self.num_tokens = self.patch_embed.patch_shape[0] * self.patch_embed.patch_shape[1] # = n_patches height * n_patches width = total n_patches
+        self.pos_embedding = nn.Parameter(torch.randn(1, self.num_tokens, embed_dim)) # initialize learnable parameter (seq_len, embed_dim)
 
         #define the cls and mask tokens
-        self.mask_token = nn.Parameter(torch.randn(1, 1, embed_dim))
+        self.mask_token = nn.Parameter(torch.randn(1, 1, embed_dim)) # adding another token on top 
         nn.init.trunc_normal_(self.mask_token, 0.02)
 
         #define the encoder and decoder, as well as the layer normalization and dropout
