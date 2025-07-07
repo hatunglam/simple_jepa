@@ -89,7 +89,7 @@ class IJEPA_base(nn.Module):
         #get the number of patches
         num_patches = patch_h * patch_w
         #get the number of patches in the target block
-        num_patches_block = int(patch_h * patch_w * scale)
+        num_patches_block = int(patch_h * patch_w * scale) # scale : % of the image used for each target block 
         #get the height and width of the target block with aspect ratio
         block_h = int(torch.sqrt(torch.tensor(num_patches_block / aspect_ratio)))
         block_w = int(aspect_ratio * block_h)
