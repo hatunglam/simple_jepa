@@ -42,9 +42,8 @@ class Predictor(nn.Module):
         self.predictor(x) # ---> (Batch, Context + Target sequence, Embed)
         # Choose only the target prediction
         # Which is (Batch, Target sequence, Embed)
-        return x[:, -target_mask.shape[1], :]
+        return x[:, -target_mask.shape[1]:, :]
         
-
         
     
 
