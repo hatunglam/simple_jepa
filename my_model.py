@@ -15,8 +15,7 @@ class PatchEmbed(nn.Module):
             patch_size = patch_size, patch_size
 
         # Calculate the number of patches
-        self.patch_shape = (img_size[0] // patch_size[0], img_size[1] // patch_size[1])
-        self.n_patches = (img_size // patch_size)**2
+        self.patch_shape = (img_size[0] // patch_size[0], img_size[1] // patch_size[1])    
 
         self.conv = nn.Conv2d(in_channels, embed_size,
                               kernel_size= patch_size, stride = patch_size)
@@ -27,6 +26,26 @@ class PatchEmbed(nn.Module):
         x = rearrange(x, "b e h w -> b (h w) e")
         
         return x
+    
+class Predictor(nn.Module):
+    def __init__(self, embed_dim, depth, n_heads):
+        super().__init__()
+
+        # The Predictor is a Decoder block
+        # depth is the number of Transformer blocks
+        self.predictor = Decoder(dim = embed_dim, depth = depth, heads = n_heads)
+
+    def forward(self, context_rep, target_mask):
+        # Concatenate context and target representation along the sequence length 
+        x = torch.cat((context_rep, target_mask), dim=1)
+        # predict with the decoder
+        self.predictor(x) # ---> (Batch, Context + Target sequence, Embed)
+        # Choose only the target prediction
+        # Which is (Batch, Target sequence, Embed)
+        return x[:, -target_mask.shape[1], :]
+        
+
+        
     
 
     
