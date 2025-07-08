@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from x_transformers import Encoder, Decoder
 from einops import rearrange
+import copy
 
 class PatchEmbed(nn.Module):
     def __init__(self, img_size, patch_size, in_channels, embed_size):
@@ -46,22 +47,47 @@ class Predictor(nn.Module):
     
 # Main model
 class IJEPA(nn.Module):
-    def __init__(self, ):
+    def __init__(
+            self,
+            img_size, patch_size, in_channels, embed_size,
+            n_heads, encoder_depth, predictor_depth,
+            M =4, post_embed_norm = False,
+            mode = 'train', layer_dropout = 0.
+            ):
         super().__init__()
 
         # Define number of Mask and mode 
+        self.M = M
+        self.mode = mode
+        self.layer_dropout = layer_dropout
 
         # Patch Embeddings and Pos Embed
-
-        # adding CLS
+        self.patch_embed = PatchEmbed(img_size, patch_size, in_channels,
+                                      embed_size)
+        self.patch_dim = (self.patch_embed.patch_shape[0], self.patch_embed.patch_shape[1])
+        self.n_tokens = self.patch_embed.patch_shape[0] * self.patch_embed.patch_shape[1]
+        self.pos_embedding = nn.Parameter(torch.randn(2, self.n_tokens, embed_size))
+        
+        # adding CLS and masked token
+        self.masked_token = nn.Parameter(torch.randn(1, 1, embed_size))
+        nn.init.trunc_normal_(self.masked_token, 0.02)
 
         # Layer Norm
-
+        self.norm = nn.LayerNorm(embed_size)
+        self.post_embed_norm = nn.LayerNorm if post_embed_norm else nn.Identity()
 
         # Teacher and Student Encoder, where student encoder is the deepcopy of the teacher encoder
+        self.teacher_encoder = Encoder(
+            dim= embed_size,
+            heads = n_heads,
+            depth = encoder_depth,
+            layer_dropout = self.layer_dropout
+        )
 
+        self.student_encoder = copy.deepcopy(self.teacher_encoder).cuda()
 
         # Initialize Predictor
+        self.predictor = Predictor(embed_size, predictor_depth, n_heads)
 
     @torch.no_grad()
     def get_target(self):
@@ -72,11 +98,32 @@ class IJEPA(nn.Module):
 
         pass
 
-    def forward(self):
+    def forward(
+            self, x, 
+            target_aspect_ratio, target_scale,
+            context_aspect_ratio, context_scale
+            ):
+        
+        # get patch embeddings (ViT)
+        x = self.pat
 
-        pass
+        # add positional embeddings (ViT)
 
-    
+        # Normalize (ViT)
+
+
+
+        # get target embeddings
+
+
+        # get context embeddings
+
+
+        # get prediction block and predict iteratively (part of Prediction module)
+
+        
+
+
         
     
 

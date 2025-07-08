@@ -85,7 +85,7 @@ class IJEPA_base(nn.Module):
         x = target_encoder(x)
         x = self.norm(x)
         #get the patch dimensions
-        patch_h, patch_w = patch_dim
+        patch_h, patch_w = patch_dim # = n_patches for each side
         #get the number of patches
         num_patches = patch_h * patch_w
         #get the number of patches in the target block
@@ -136,7 +136,9 @@ class IJEPA_base(nn.Module):
         return x[:, patches, :]
 
 
-    def forward(self, x, target_aspect_ratio=1, target_scale=1, context_aspect_ratio=1, context_scale=1):
+    def forward(self, x, target_aspect_ratio=1,
+                target_scale=1, context_aspect_ratio=1,
+                context_scale=1):
         #get the patch embeddings
         x = self.patch_embed(x)
         b, n, e = x.shape
