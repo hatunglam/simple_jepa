@@ -105,15 +105,20 @@ class IJEPA(nn.Module):
             ):
         
         # get patch embeddings (ViT)
-        x = self.pat
+        x = self.patch_embed(x)
+        b, n, e = x.shape
 
         # add positional embeddings (ViT)
+        x = x + self.pos_embedding
 
         # Normalize (ViT)
-
-
-
+        x = self.post_embed_norm(x)        
+        
+        if self.mode == 'test':
+            return self.student_encoder(x)
+        
         # get target embeddings
+        target_block, target_patch, all_patches = get_target()
 
 
         # get context embeddings

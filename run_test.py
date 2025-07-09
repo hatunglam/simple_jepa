@@ -1,4 +1,5 @@
 from my_model import Predictor
+from model import IJEPA_base
 import torch
 
 def test_predictor():
@@ -20,6 +21,10 @@ def test_predictor():
     print('Output shape', out.shape)
 
     assert out.shape == (batch_size, target_len, embed_dim), 'Wrong shape'
+
+def check_context_shape():
+    pass
+
 
 if __name__ == "__main__":
     test_predictor()
