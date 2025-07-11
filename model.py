@@ -148,7 +148,7 @@ class IJEPA_base(nn.Module):
         x = self.post_emb_norm(x)
         #if mode is test, we get return full embedding:
         if self.mode == 'test':
-            return self.student_encoder(x)
+            return self.student_encoder(x)                      
         # #get target embeddings
         target_blocks, target_patches, all_patches = self.get_target_block(
             self.teacher_encoder, x, self.patch_dim,
