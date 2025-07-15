@@ -38,8 +38,8 @@ class D2VDataModule(pl.LightningDataModule):
     def __init__(self,
                  dataset_path,
                  batch_size=16,
-                 num_workers=4,
-                 pin_memory=True,
+                 num_workers=0, # Set to 0 for no additional workers from 4
+                 pin_memory=False, # set to True if using GPU
                  shuffle=True
                  ):
         super().__init__()
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     model_summary = ModelSummary(max_depth=2)
 
     trainer = pl.Trainer(
-        accelerator='gpu',
+        accelerator='cpu',
         devices=1,
         precision=16,
         max_epochs=10,

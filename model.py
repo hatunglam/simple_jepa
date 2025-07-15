@@ -55,6 +55,7 @@ class IJEPA_base(nn.Module):
         self.M = M
         self.mode = mode
         self.layer_dropout = layer_dropout
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         #define the patch embedding and positional embedding
         self.patch_embed = PatchEmbed(img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
@@ -75,7 +76,9 @@ class IJEPA_base(nn.Module):
             depth=enc_depth, 
             layer_dropout=self.layer_dropout,
         )  
-        self.student_encoder = copy.deepcopy(self.teacher_encoder).cuda()
+
+        # copy.deepcopy(self.teacher_encoder).cuda() if gpu is available
+        self.student_encoder = copy.deepcopy(self.teacher_encoder)
         self.predictor = Predictor(embed_dim, num_heads, pred_depth)
 
     @torch.no_grad() 
@@ -114,7 +117,7 @@ class IJEPA_base(nn.Module):
             #get the target block
             target_patches.append(patches)
             target_block[z] = x[:, patches, :]
-        return target_block.cuda(), target_patches, all_patches
+        return target_block.to(self.device), target_patches, all_patches
 
     def get_context_block(self, x, patch_dim, aspect_ratio, scale, target_patches):
         patch_h, patch_w = patch_dim
