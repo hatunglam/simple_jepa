@@ -65,17 +65,100 @@ def select_patches(patch_dim, block_dim):
 
     start_i = random_int(max_i)
     start_j = random_int(max_j)
-    print(start_i, start_j)
+    print('2d id:', start_i, start_j)
 
     matrix = torch.arange(0, patch_h*patch_w).reshape(patch_h, patch_w)
     print(matrix)
 
     id_1d = (start_i * patch_w) + start_j
-    print(id_1d)
+    #print(id_1d)
+
+    return id_1d # (int) a single id for starting patch 
+
+def get_target_block(patch_dim = (5, 8), scale = 0.2, aspect_ratio = 2, n_target_blocks=5):
     
+    n_patch_h, n_patch_w = patch_dim
+
+    # scale is the ratio of the target block to the whole image
+    n_patches_perblock = int(n_patch_h * n_patch_w * scale)
+
+    # print(patch_dim)
+    # print(f'total patches: {n_patch_h*n_patch_w}')
+    # print(n_patches_perblock)
+
+    # Calculate the height and width and maintain aspect ratio
+    # aspect ratio = h / w
+    # <=> h = aspect ratio * w 
+    # w * h <=> w^2 * aspect ratio = n_patches_perblock
+    # <=> w = sqrt(n_patches_perblock / aspect ratio)
+    
+    block_w = int(torch.sqrt(torch.tensor(n_patches_perblock / aspect_ratio)))
+    block_h = int(block_w * aspect_ratio)
+
+    block_dim = block_h, block_w
+
+    print('Image shape (patches): ', n_patch_h, n_patch_w)
+    print('Block shape (patches): ', block_h, block_w)
+
+    # Initialize placeholder
+    target_patches = [] # [ [id11, id12, ...], [id21, id22, ...], ... ]
+
+    all_patches = set() # membership check
+    
+    # Loop through all target blocks
+    for target_id in range(n_target_blocks):
+        start_patch = select_patches(patch_dim, block_dim)
+        # --> id 
+        print("start patch id = ", start_patch)
+
+        # List to hold the patches:
+        patches = []
+
+        # Collect patches  
+        for h in range(block_h):
+            for w in range(block_w):
+                patch_i = start_patch + (h * n_patch_w) + w
+                # start_patch + (h * n_patch_w) --> skip to next h row, same column
+                # + w ---> move to the next w column 
+
+                patches.append(patch_i) # append the patch id
+                all_patches.add(patch_i)
+                print(f'pos {(h,w)}: {patch_i}')
+
+        # Finish 1 target block
+        target_patches.append(patches) # append the whole block
+        
+        print("________________________________________________________________________________")
+
+
+def generate_patch_id(nh= 5, nw= 8):
+    h = torch.arange(nh)
+    w = torch.arange(nw)
+    print("h: ", h)
+    print("w: ", w)
+
+    grid = torch.cartesian_prod(h,w)
+
+    print("grid: ", grid)
+
+def generate_context(patch_dim, scale= 0.2, aspect_ratio=2): # --> [id, id, ...]
+    patch_h, patch_w = patch_dim
+
+    n_patches_perblock = int(patch_h * patch_w * scale)
+
+    # Calculate height and width 
+    block_w = int(torch.sqrt(torch.tensor(n_patches_perblock / aspect_ratio)))
+    block_h = int(block_w * aspect_ratio)
+
+    pass
+
+def make_pred(n_target_blocks, ):
+
+    pass
+
+                  
+
 
 if __name__ == "__main__":
-    select_patches(
-        patch_dim= (7, 8),
-        block_dim= (3, 4)
-    )
+
+ make_pred()

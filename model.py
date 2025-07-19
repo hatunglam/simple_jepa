@@ -63,7 +63,7 @@ class IJEPA_base(nn.Module):
         self.num_tokens = self.patch_embed.patch_shape[0] * self.patch_embed.patch_shape[1] # = n_patches height * n_patches width = total n_patches
         self.pos_embedding = nn.Parameter(torch.randn(1, self.num_tokens, embed_dim)) # initialize learnable parameter (seq_len, embed_dim)
 
-        #define the cls and mask tokens
+        #define the mask tokens
         self.mask_token = nn.Parameter(torch.randn(1, 1, embed_dim)) # adding another token on top 
         nn.init.trunc_normal_(self.mask_token, 0.02)
 
@@ -85,7 +85,7 @@ class IJEPA_base(nn.Module):
     def get_target_block(self, target_encoder, x, patch_dim, aspect_ratio, scale, M):  
         #get the target block
         target_encoder = target_encoder.eval()
-        x = target_encoder(x)
+        x = target_encoder(x)  
         x = self.norm(x)
         #get the patch dimensions
         patch_h, patch_w = patch_dim # = n_patches for each side
@@ -158,6 +158,7 @@ class IJEPA_base(nn.Module):
             target_aspect_ratio, target_scale, self.M
             )
         
+        # n = n_patches in each target block
         m, b, n, e = target_blocks.shape
         #get context embedding
 
