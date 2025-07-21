@@ -65,7 +65,7 @@ def select_patches(patch_dim, block_dim):
 
     start_i = random_int(max_i)
     start_j = random_int(max_j)
-    print('2d id:', start_i, start_j)
+    #print('2d id:', start_i, start_j)
 
     matrix = torch.arange(0, patch_h*patch_w).reshape(patch_h, patch_w)
     print(matrix)
@@ -75,7 +75,7 @@ def select_patches(patch_dim, block_dim):
 
     return id_1d # (int) a single id for starting patch 
 
-def get_target_block(patch_dim = (5, 8), scale = 0.2, aspect_ratio = 2, n_target_blocks=5):
+def get_target_block(patch_dim = (5, 8), scale = 0.2, aspect_ratio = 2, n_target_blocks=3):
     
     n_patch_h, n_patch_w = patch_dim
 
@@ -97,19 +97,18 @@ def get_target_block(patch_dim = (5, 8), scale = 0.2, aspect_ratio = 2, n_target
 
     block_dim = block_h, block_w
 
-    print('Image shape (patches): ', n_patch_h, n_patch_w)
-    print('Block shape (patches): ', block_h, block_w)
+    #print('Image shape (patches): ', n_patch_h, n_patch_w)
+    #print('Block shape (patches): ', block_h, block_w)
 
     # Initialize placeholder
     target_patches = [] # [ [id11, id12, ...], [id21, id22, ...], ... ]
-
     all_patches = set() # membership check
     
     # Loop through all target blocks
     for target_id in range(n_target_blocks):
         start_patch = select_patches(patch_dim, block_dim)
         # --> id 
-        print("start patch id = ", start_patch)
+        #print("start patch id = ", start_patch)
 
         # List to hold the patches:
         patches = []
@@ -123,12 +122,16 @@ def get_target_block(patch_dim = (5, 8), scale = 0.2, aspect_ratio = 2, n_target
 
                 patches.append(patch_i) # append the patch id
                 all_patches.add(patch_i)
-                print(f'pos {(h,w)}: {patch_i}')
+                #print(f'pos {(h,w)}: {patch_i}')
+        
+        print(f"block {target_id}: patches = {patches}")
 
         # Finish 1 target block
         target_patches.append(patches) # append the whole block
         
         print("________________________________________________________________________________")
+    
+    return target_patches, all_patches
 
 
 def generate_patch_id(nh= 5, nw= 8):
@@ -141,7 +144,8 @@ def generate_patch_id(nh= 5, nw= 8):
 
     print("grid: ", grid)
 
-def generate_context(patch_dim, scale= 0.2, aspect_ratio=2): # --> [id, id, ...]
+def generate_context(patch_dim, target_patches, scale= 0.2, aspect_ratio=2): # --> [id, id, ...]
+    print('____________________________________________________________')
     patch_h, patch_w = patch_dim
 
     n_patches_perblock = int(patch_h * patch_w * scale)
@@ -150,15 +154,95 @@ def generate_context(patch_dim, scale= 0.2, aspect_ratio=2): # --> [id, id, ...]
     block_w = int(torch.sqrt(torch.tensor(n_patches_perblock / aspect_ratio)))
     block_h = int(block_w * aspect_ratio)
 
-    pass
+    block_dim = block_h, block_w
+    print(block_dim)
 
-def make_pred(n_target_blocks, ):
+    start_patch = select_patches(patch_dim, block_dim)
+    context_set = set()
 
-    pass
+    for h in range(block_h):
+        for w in range(block_w):
+            patch_hw = start_patch + (h * patch_w) + w
 
-                  
+            context_set.add(patch_hw)
 
+    print("Initial Context patches: ", context_set),
+    print("target patches: ", target_patches)
+
+    # Rule out match patches
+    context_patches = list(context_set.difference(target_patches))
+    print("final context: ", context_patches)
+
+    return context_patches
+
+def make_pred(n_target_blocks, batch,
+               n_patches, # number of patches in a single target block
+               embed_dim,
+               target_patches, # [ [id, id, ...], [id, id, ...] ]
+               context_encoding 
+               ):
+    
+    n_image_patches = 8 * 5
+    pos_embedding = torch.randn(1, n_image_patches, embed_dim)
+    # n_patches: number of patches in an image
+    # this is the positional embedding for all patches in the image
+    print("pos_embedding shape: " ,  pos_embedding.shape)
+
+    pos_ = torch.arange(n_image_patches).unsqueeze(1).repeat(1, embed_dim)
+    pos = pos_.unsqueeze(0)
+    print(pos)
+
+    print("____________________________________________________________")
+    mask_token = torch.randn(1, 1, embed_dim)
+    print('Mask token shape: ', mask_token.shape)
+    # a single vector with size of embedding
+
+    # Initialize tensor to hold prediction block
+    prediction_block = torch.zeros(n_target_blocks, batch, n_patches, embed_dim)
+    print("____________________________________________________________")
+
+    # Predict each target block seperately
+    for block_id in range(n_target_blocks):
+        
+        target_mask = mask_token.repeat(batch, n_patches, 1)
+        # clone batch times, n_patches times that single vector size embed_dim
+
+        #print(target_mask.shape)
+        print(f"block {block_id}")
+
+        print("target_patches[block_id]: ", target_patches[block_id])
+        print("queried: ", pos[:, target_patches[block_id], :])
+
+        target_pos_emb = pos_embedding[:, target_patches[block_id], :]
+
+def extract_context(x, context):
+    # Context --> [id, id, ....] 
+    return x[:, context, :]
+
+def main_1():
+    img_patch_dim = (5, 8)
+    emb = 10
+    scale = 0.2
+    aspect_ratio = 2
+    n_target_blocks=3
+
+    h = 5
+    w = 8 
+
+    x = torch.arange(0, h*w).unsqueeze(1).repeat(1, emb).unsqueeze(0)
+    print(x.shape)
+    print(x)
+
+    target, target_patches = get_target_block()
+    # # # print("target shape: ", len(target))
+    # # # make_pred(3, 5, 6, 10, target, None)
+    context = generate_context(img_patch_dim, target_patches, scale= 0.2, aspect_ratio=2)
+
+    print("###################################################################################")
+
+    z = extract_context(x, context=context)
+    print(z)
 
 if __name__ == "__main__":
+    pass
 
- make_pred()
