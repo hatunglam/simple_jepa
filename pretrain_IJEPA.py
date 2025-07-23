@@ -206,8 +206,8 @@ if __name__ == '__main__':
 
     trainer.fit(model, dataset)
 
-    from predict_test import predict_test
+    # from predict_test import predict_test
 
-    predict_test(model)
+    # predict_test(model)
 
 

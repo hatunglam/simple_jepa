@@ -25,6 +25,6 @@ def predict_test(model):
             loss = model.criterion(y_student, y_teacher).item()
 
             print(f"\nSample {i+1}:")
-            print(f"Prediction (student): {y_student.flatten()[:10]}...")  # print first 10 values
+            print(f"Prediction (student): {y_student.flatten()[:10]}...")  
             print(f"Ground truth (teacher): {y_teacher.flatten()[:10]}...")
             print(f"Loss = {loss:.6f}")
