@@ -170,12 +170,15 @@ class IJEPA_base(nn.Module):
         context_encoding = self.norm(context_encoding)
 
 
-        prediction_blocks = torch.zeros((m, b, n, e)).cuda()
+        prediction_blocks = torch.zeros((m, b, n, e)) # no .cuda()
         #get the prediction blocks, predict each target block separately
         for i in range(m):
             target_masks = self.mask_token.repeat(b, n, 1)
-            target_pos_embedding = self.pos_embedding[:, target_patches[i], :]
+            target_pos_embedding = self.pos_embedding[:, target_patches[i], :] 
+            # access the ith vector in list of patches, contains list of patch ids
             target_masks = target_masks + target_pos_embedding
             prediction_blocks[i] = self.predictor(context_encoding, target_masks)
 
         return prediction_blocks, target_blocks
+    
+    
