@@ -9,7 +9,7 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     ModelSummary,
 )
-from pytorch_lightning.loggers import WandbLogger
+#from pytorch_lightning.loggers import WandbLogger
 from model import IJEPA_base
 
 
@@ -20,7 +20,7 @@ class IJEPADataset(Dataset):
                  stage='train',
                  ):
         super().__init__()
-        img1 =torch.randn(3, 224, 224)
+        img1 =torch.randn(3, 100, 100)
         self.data = img1.repeat(100, 1, 1, 1)
         
     def __len__(self):
@@ -37,7 +37,7 @@ Placeholder for datamodule in pytorch lightning
 class D2VDataModule(pl.LightningDataModule):
     def __init__(self,
                  dataset_path,
-                 batch_size=16,
+                 batch_size=10,
                  num_workers=0, # Set to 0 for no additional workers from 4
                  pin_memory=False, # set to True if using GPU
                  shuffle=True
@@ -75,8 +75,8 @@ pytorch lightning model
 class IJEPA(pl.LightningModule):
     def __init__(
             self,
-            img_size=224,
-            patch_size=16,
+            img_size=100,
+            patch_size=10,
             in_chans=3, 
             embed_dim=64,
             enc_heads=8,
@@ -140,6 +140,7 @@ class IJEPA(pl.LightningModule):
         y_student, y_teacher = self(x, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale)
         loss = self.criterion(y_student, y_teacher)
         self.log('train_loss', loss)
+        print(f"Epoch {self.current_epoch}: Train loss = {loss.item():.4f}")
                     
         return loss
     
@@ -189,7 +190,7 @@ class IJEPA(pl.LightningModule):
 if __name__ == '__main__':
     dataset = D2VDataModule(dataset_path='data')
 
-    model = IJEPA(img_size=224, patch_size=16, in_chans=3, embed_dim=64, enc_heads=8, enc_depth=8, decoder_depth=6, lr=1e-3)
+    model = IJEPA(img_size=100, patch_size=10, in_chans=3, embed_dim=64, enc_heads=8, enc_depth=8, decoder_depth=6, lr=1e-3)
     
     lr_monitor = LearningRateMonitor(logging_interval="step")
     model_summary = ModelSummary(max_depth=2)
@@ -197,10 +198,16 @@ if __name__ == '__main__':
     trainer = pl.Trainer(
         accelerator='cpu',
         devices=1,
-        precision=16,
-        max_epochs=10,
+        #precision=16,
+        max_epochs=15,
         callbacks=[lr_monitor, model_summary],
         gradient_clip_val=.1,
     )
 
     trainer.fit(model, dataset)
+
+    from predict_test import predict_test
+
+    predict_test(model)
+
+
