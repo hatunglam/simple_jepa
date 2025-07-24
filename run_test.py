@@ -244,5 +244,5 @@ def main_1():
     print(z)
 
 if __name__ == "__main__":
-    pass
+    main_1()
 

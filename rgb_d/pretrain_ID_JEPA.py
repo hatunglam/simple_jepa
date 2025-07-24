@@ -29,8 +29,14 @@ class IJEPADataset(Dataset):
     def __len__(self):
         return len(self.rgb_data)
     
-    def __getitem__(self, index):
-        return self.rgb_data[index], self.depth_data[index]
+    def __getitem__(self, index): 
+        data = {
+            "rgb_image" : self.rgb_data[index],
+            "depth_image" : self.depth_data[index]
+        }
+        
+        return data
+        # return self.rgb_data[index], self.depth_data[index]
 
 
 '''Placeholder for datamodule in pytorch lightning'''
@@ -122,8 +128,8 @@ class IDJEPA(pl.LightningModule):
         #define loss
         self.criterion = nn.MSELoss()
     
-    def forward(self, x_rgb, x_dep, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale):
-        return self.model(x_rgb, x_dep, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale)
+    def forward(self,data, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale):
+        return self.model(data, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale)
     
     '''Update momentum for teacher encoder'''
     def update_momentum(self, m):
@@ -135,14 +141,13 @@ class IDJEPA(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx):
-        x_rgb, x_dep = batch
         #generate random target and context aspect ratio and scale
         target_aspect_ratio = np.random.uniform(self.target_aspect_ratio[0], self.target_aspect_ratio[1])
         target_scale = np.random.uniform(self.target_scale[0], self.target_scale[1])
         context_aspect_ratio = self.context_aspect_ratio
         context_scale = np.random.uniform(self.context_scale[0], self.context_scale[1])
 
-        y_student, y_teacher = self(x_rgb, x_dep, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale)
+        y_student, y_teacher = self(batch, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale)
         loss = self.criterion(y_student, y_teacher)
         self.log('train_loss', loss)
         print(f"Epoch {self.current_epoch}: Train loss = {loss.item():.4f}")
@@ -150,27 +155,25 @@ class IDJEPA(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        x_rgb, x_dep = batch
         target_aspect_ratio = np.random.uniform(self.target_aspect_ratio[0], self.target_aspect_ratio[1])
         target_scale = np.random.uniform(self.target_scale[0], self.target_scale[1])
         context_aspect_ratio = self.context_aspect_ratio
         context_scale = np.random.uniform(self.context_scale[0], self.context_scale[1])
 
-        y_student, y_teacher = self(x_rgb, x_dep, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale)
+        y_student, y_teacher = self(batch, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale)
         loss = self.criterion(y_student, y_teacher)
         self.log('val_loss', loss)
         
         return loss
     
     def predict_step(self, batch, batch_idx, dataloader_idx):
-        x_rgb, x_dep = batch
         target_aspect_ratio = np.random.uniform(self.target_aspect_ratio[0], self.target_aspect_ratio[1])
         target_scale = np.random.uniform(self.target_scale[0], self.target_scale[1])
         context_aspect_ratio = self.context_aspect_ratio
         context_scale = 1
         self.model.mode = "test"
 
-        return self(x_rgb, x_dep, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale) #just get teacher embedding
+        return self(batch, target_aspect_ratio, target_scale, context_aspect_ratio, context_scale) #just get teacher embedding
 
     def on_after_backward(self):
         self.update_momentum(self.m)

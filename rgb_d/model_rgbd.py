@@ -141,10 +141,13 @@ class IDJEPA_base(nn.Module):
         return x[:, patches, :]
 
 
-    def forward(self, x_rgb, x_dep, target_aspect_ratio=1,
+    def forward(self,data, target_aspect_ratio=1,
                 target_scale=1, context_aspect_ratio=1,
                 context_scale=1):
         
+        # try having Input as Dict 
+        # x: {"rgb": ..., "depth": ...}
+        x_rgb, x_dep = data["rgb_image"], data["depth_image"] 
         # Check input shape
         assert x_rgb.shape[1] == 3, f"Expected RGB input with 3 channels, got {x_rgb.shape[1]}"
         assert x_dep.shape[1] == 1, f"Expected depth input with 1 channel, got {x_dep.shape[1]}"
