@@ -1,6 +1,0 @@
-0. Use VGG/ ResNEt / EfficientNet / ConvNext instead of patch embedding
-1. Implement a Decoder to take the trained ID-JEPA output embeddings to reconstruct Depth
-2. Train and Test everything with Grayscale image imput instead of RGB 
-3. If Grayscale is similar to RGB, can i use the same Patch Embedding
-
-
